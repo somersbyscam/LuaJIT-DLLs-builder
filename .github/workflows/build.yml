@@ -1,4 +1,5 @@
 name: Build LuaJIT DLLs
+run-name: Build LuaJIT DLLs | ${{ github.event.head_commit.message }}
 
 on: 
   push: # Запускать при каждом пуше в любую ветку
@@ -6,6 +7,8 @@ on:
 
 jobs:
   build:
+    permissions:
+     contents: write
     runs-on: ubuntu-latest
 
     steps:
