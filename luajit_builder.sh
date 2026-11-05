@@ -7,6 +7,21 @@ if [ ! -d "LuaJIT/src" ]; then
     git clone --branch v2.1 https://github.com/LuaJIT/LuaJIT.git
 fi
 
+# --- Получаем информацию о коммите ---
+cd LuaJIT
+COMMIT_HASH=$(git rev-parse --short=8 HEAD)
+COMMIT_DATE=$(git log -1 --format=%cd --date=format:'%d.%m.%Y %H:%M:%S')
+COMMIT_MSG=$(git log -1 --format=%s)
+cd ..
+
+# Выводим информацию в лог сборки
+echo "================================================="
+echo "Хэш коммита: ${COMMIT_HASH}"
+echo "Дата коммита: ${COMMIT_DATE}"
+echo "Название: ${COMMIT_MSG}"
+echo "================================================="
+# -------------------------------------------------
+
 mkdir -p LuaJIT/build/windows
 
 # Общие флаги для линковщика, чтобы DLL были максимально автономными
@@ -30,13 +45,26 @@ make clean
 cd ../..
 
 echo "=== 5. Упаковка результатов в ZIP ==="
-# Генерируем текущую дату в формате ДД.ММ.ГГГГ
+# Генерируем текущую дату сборки
 BUILD_DATE=$(date +"%d.%m.%Y")
-ZIP_NAME="LuaJIT_DLLs_${BUILD_DATE}.zip"
+BUILD_TIME=$(date +"%H:%M:%S")
 
-# Переходим в папку с результатами и пакуем только DLL
+# Формируем имя архива, включая хэш коммита
+ZIP_NAME="LuaJIT_DLLs_${BUILD_DATE}_commit_${COMMIT_HASH}.zip"
+
+# Переходим в папку с результатами
 cd LuaJIT/build/windows
-zip -r "../../../${ZIP_NAME}" *.dll
+
+# Создаем текстовый файл с информацией о сборке (обязательно)
+echo "=== LuaJIT Build Information ===" > build_info.txt
+echo "Date of build (CI):   ${BUILD_DATE} ${BUILD_TIME}" >> build_info.txt
+echo "Commit Hash:          ${COMMIT_HASH}" >> build_info.txt
+echo "Commit Date:          ${COMMIT_DATE}" >> build_info.txt
+echo "Commit Message:       ${COMMIT_MSG}" >> build_info.txt
+echo "Target Branch:        v2.1" >> build_info.txt
+
+# Пакуем DLL и текстовый файл
+zip -r "../../../${ZIP_NAME}" *.dll build_info.txt
 cd ../../..
 
 echo "=== Сборка успешно завершена! Создан файл ${ZIP_NAME} ==="
