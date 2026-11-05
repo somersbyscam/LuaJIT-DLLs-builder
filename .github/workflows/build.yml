@@ -1,5 +1,5 @@
 name: Build LuaJIT DLLs
-run-name: Build LuaJIT DLLs | ${{ github.event.head_commit.message }}
+run-name: Build LuaJIT DLLs
 
 on: 
   push: # Запускать при каждом пуше в любую ветку
