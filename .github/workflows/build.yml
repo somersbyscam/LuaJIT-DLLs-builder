@@ -1,0 +1,41 @@
+name: Build LuaJIT DLLs
+
+on: 
+  push: # Запускать при каждом пуше в любую ветку
+  workflow_dispatch: # Добавляет кнопку "Run workflow" для ручного запуска на сайте
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Клонирование репозитория
+      uses: actions/checkout@v4
+
+    - name: Установка компиляторов MinGW и утилиты zip
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential git gcc-mingw-w64-x86-64 gcc-mingw-w64-i686 gcc-multilib zip
+
+    - name: Запуск скрипта сборки
+      run: |
+        chmod +x luajit_builder.sh
+        ./luajit_builder.sh
+
+    - name: Сохранение артефакта (Скачиваемый ZIP)
+      uses: actions/upload-artifact@v4
+      with:
+        name: LuaJIT-DLLs-Build
+        # Используем маску, так как дата в имени файла генерируется динамически
+        path: "*.zip"
+
+    # ОПЦИОНАЛЬНО: Автоматическое создание релиза
+    # Сработает, только если вы запушите тег (например: git tag v1.0 && git push origin v1.0)
+    - name: Публикация в GitHub Releases
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        # Здесь тоже указываем маску, чтобы прикрепить файл с датой в названии
+        files: "*.zip"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
